@@ -37,6 +37,8 @@ public class PresentationManager {
     /// The instance of the `UIAlertController` used to present the update alert.
     var alertController: UIAlertController?
 
+    private var didPresentOnAppLaunch: Bool = false
+
     /// The `UIWindow` instance that presents the `SirenViewController`.
     private lazy var updaterWindow = createWindow()
 
@@ -122,6 +124,9 @@ extension PresentationManager {
         case .option:
             alertController?.addAction(nextTimeAlertAction(completion: handler))
             alertController?.addAction(updateAlertAction(completion: handler))
+        case .appLaunch:
+            alertController?.addAction(nextTimeAlertAction(completion: handler))
+            alertController?.addAction(updateAlertAction(completion: handler))
         case .skip:
             alertController?.addAction(updateAlertAction(completion: handler))
             alertController?.addAction(nextTimeAlertAction(completion: handler))
@@ -134,6 +139,11 @@ extension PresentationManager {
         // If the `updaterWindow` is not hidden, then an alert is already presented.
         // The latter prevents `UIAlertController`'s from appearing on top of each other.
         if rules.alertType != .none, let updaterWindow = updaterWindow, updaterWindow.isHidden {
+            if rules.alertType == .appLaunch, didPresentOnAppLaunch {
+                cleanUp()
+                return
+            }
+            didPresentOnAppLaunch = true
             alertController?.show(window: updaterWindow)
         } else {
             // This is a safety precaution to avoid multiple windows from presenting on top of each other.
